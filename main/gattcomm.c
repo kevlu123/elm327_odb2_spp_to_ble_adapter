@@ -4,25 +4,14 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdbool.h>
-#include <stdio.h>
-#include <inttypes.h>
-#include "nvs.h"
-#include "nvs_flash.h"
-#include "esp_log.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/event_groups.h"
-#include "esp_bt.h"
-#include "esp_gap_ble_api.h"
-#include "esp_gatt_defs.h"
-#include "esp_bt_main.h"
-#include "esp_bt_device.h"
-#include "esp_gatt_common_api.h"
-#include "esp_gatts_api.h"
-#include "esp_bt_defs.h"
-#include "esp_system.h"
-#include "sdkconfig.h"
 
-#define TAG                "GATT_COMM"
+#include <freertos/FreeRTOS.h>
+#include <esp_log.h>
+#include <esp_gap_ble_api.h>
+#include <esp_gatts_api.h>
+#include <esp_gatt_common_api.h>
+
+#define TAG                "GATTCOMM"
 #define ADV_NAME           "VLINK ADAPTER"
 #define SERVICE_UUID_BYTES 0xad, 0xe6, 0x50, 0xf7, 0x81, 0x56, 0xa9, 0xeb, 0x49, 0x64, 0x6d, 0x6d, 0x9f, 0xca, 0x89, 0xfe,
 #define CHAR_UUID_BYTES    0xe2, 0x05, 0xe7, 0x16, 0x87, 0x58, 0x5d, 0xb7, 0x34, 0x4a, 0x01, 0xd3, 0xcb, 0x0d, 0x20, 0x8a,
@@ -108,7 +97,7 @@ static void start_advertising(void)
     if (err)
     {
         ESP_LOGE(TAG, "esp_ble_gap_start_advertising failed: %d", err);
-        panic(PANIC_ID_ADV_START_FAILED);
+        panic(PANIC_ID_GATTCOMM_ADV_START_FAILED);
     }
 }
 
@@ -141,7 +130,7 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event,
         {
             ESP_LOGE(TAG, "ESP_GAP_BLE_ADV_START_COMPLETE_EVT failed: %d",
                      param->adv_start_cmpl.status);
-            panic(PANIC_ID_ADV_START_FAILED2);
+            panic(PANIC_ID_GATTCOMM_ADV_START_FAILED2);
         }
         break;
 
@@ -212,7 +201,7 @@ static void gatts_event_handler(esp_gatts_cb_event_t event,
             ESP_LOGE(TAG, "ESP_GATTS_REG_EVT failed: app_id=%d status=%d",
                      param->reg.app_id,
                      param->reg.status);
-            panic(PANIC_ID_GATTS_REG_EVT_FAILED);
+            panic(PANIC_ID_GATTCOMM_GATTS_REG_EVT_FAILED);
         }
         ctx.gatts_if = gatts_if;
 
@@ -220,28 +209,28 @@ static void gatts_event_handler(esp_gatts_cb_event_t event,
         if (err)
         {
             ESP_LOGE(TAG, "esp_ble_gap_set_device_name failed: %d", err);
-            panic(PANIC_ID_SET_DEVICE_NAME_FAILED);
+            panic(PANIC_ID_GATTCOMM_SET_DEVICE_NAME_FAILED);
         }
 
         err = esp_ble_gap_config_adv_data(&ADV_DATA);
         if (err)
         {
             ESP_LOGE(TAG, "esp_ble_gap_config_adv_data failed: %d", err);
-            panic(PANIC_ID_CONFIG_ADV_DATA_FAILED);
+            panic(PANIC_ID_GATTCOMM_CONFIG_ADV_DATA_FAILED);
         }
 
         err = esp_ble_gap_config_adv_data(&SCAN_RSP_DATA);
         if (err)
         {
             ESP_LOGE(TAG, "esp_ble_gap_config_adv_data failed: %d", err);
-            panic(PANIC_ID_CONFIG_SCAN_RSP_DATA_FAILED);
+            panic(PANIC_ID_GATTCOMM_CONFIG_SCAN_RSP_DATA_FAILED);
         }
 
         err = esp_ble_gatts_create_service(gatts_if, &SERVICE_ID, 16);
         if (err)
         {
             ESP_LOGE(TAG, "esp_ble_gatts_create_service failed: %d", err);
-            panic(PANIC_ID_CREATE_SERVICE_FAILED);
+            panic(PANIC_ID_GATTCOMM_CREATE_SERVICE_FAILED);
         }
         break;
 
@@ -253,7 +242,7 @@ static void gatts_event_handler(esp_gatts_cb_event_t event,
         if (err)
         {
             ESP_LOGE(TAG, "esp_ble_gatts_start_service failed: %d", err);
-            panic(PANIC_ID_START_SERVICE_FAILED);
+            panic(PANIC_ID_GATTCOMM_START_SERVICE_FAILED);
         }
 
         err = esp_ble_gatts_add_char(ctx.service_handle,
@@ -265,7 +254,7 @@ static void gatts_event_handler(esp_gatts_cb_event_t event,
         if (err)
         {
             ESP_LOGE(TAG, "esp_ble_gatts_add_char failed: %d", err);
-            panic(PANIC_ID_ADD_CHAR_FAILED);
+            panic(PANIC_ID_GATTCOMM_ADD_CHAR_FAILED);
         }
         break;
 
@@ -341,9 +330,9 @@ static void gatts_event_handler(esp_gatts_cb_event_t event,
         break;
 
     case ESP_GATTS_WRITE_EVT:
-        ESP_LOGI(TAG, "ESP_GATTS_WRITE_EVT: conn_id=%d trans_id=%"PRIu32" handle=%d write_len=%d",
+        ESP_LOGI(TAG, "ESP_GATTS_WRITE_EVT: conn_id=%d trans_id=%d handle=%d write_len=%d",
                  param->write.conn_id,
-                 param->write.trans_id,
+                 (int)param->write.trans_id,
                  param->write.handle,
                  param->write.len);
         ESP_LOG_BUFFER_HEX(TAG, param->write.value, param->write.len);
@@ -396,28 +385,28 @@ void gattcomm_init(void)
     if (err)
     {
         ESP_LOGE(TAG, "esp_ble_gap_register_callback failed: %d", err);
-        panic(PANIC_ID_GAP_REGISTER_FAILED);
+        panic(PANIC_ID_GATTCOMM_GAP_REGISTER_FAILED);
     }
 
     err = esp_ble_gatts_register_callback(gatts_event_handler);
     if (err)
     {
         ESP_LOGE(TAG, "esp_ble_gatts_register_callback failed: %d", err);
-        panic(PANIC_ID_GATTS_REGISTER_FAILED);
+        panic(PANIC_ID_GATTCOMM_GATTS_REGISTER_FAILED);
     }
 
     err = esp_ble_gatts_app_register(0);
     if (err)
     {
         ESP_LOGE(TAG, "esp_ble_gatts_app_register failed: %d", err);
-        panic(PANIC_ID_GATTS_APP_REGISTER_FAILED);
+        panic(PANIC_ID_GATTCOMM_GATTS_APP_REGISTER_FAILED);
     }
 
     err = esp_ble_gatt_set_local_mtu(500);
     if (err)
     {
         ESP_LOGE(TAG, "esp_ble_gatt_set_local_mtu failed: %d", err);
-        panic(PANIC_ID_SET_LOCAL_MTU_FAILED);
+        panic(PANIC_ID_GATTCOMM_SET_LOCAL_MTU_FAILED);
     }
 
     ESP_LOGI(TAG, "gattcomm_init success");
