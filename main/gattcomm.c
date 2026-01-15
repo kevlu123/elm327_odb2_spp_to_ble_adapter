@@ -12,9 +12,8 @@
 #include <esp_gatt_common_api.h>
 
 #define TAG                "GATTCOMM"
-#define ADV_NAME           "VLINK ADAPTER"
-#define SERVICE_UUID_BYTES 0xad, 0xe6, 0x50, 0xf7, 0x81, 0x56, 0xa9, 0xeb, 0x49, 0x64, 0x6d, 0x6d, 0x9f, 0xca, 0x89, 0xfe,
-#define CHAR_UUID_BYTES    0xe2, 0x05, 0xe7, 0x16, 0x87, 0x58, 0x5d, 0xb7, 0x34, 0x4a, 0x01, 0xd3, 0xcb, 0x0d, 0x20, 0x8a,
+#define SERVICE_UUID_BYTES 0xe7, 0x81, 0x0a, 0x71, 0x73, 0xae, 0x49, 0x9d, 0x8c, 0x15, 0xfa, 0xa9, 0xae, 0xf0, 0xc3, 0xf2
+#define CHAR_UUID_BYTES    0xbe, 0xf8, 0xd6, 0xc9, 0x9c, 0x21, 0x4c, 0x9e, 0xb6, 0x32, 0xbd, 0x58, 0xc1, 0x00, 0x9f, 0x9f
 
 static struct
 {
@@ -205,7 +204,7 @@ static void gatts_event_handler(esp_gatts_cb_event_t event,
         }
         ctx.gatts_if = gatts_if;
 
-        err = esp_ble_gap_set_device_name(ADV_NAME);
+        err = esp_ble_gap_set_device_name(BT_DEVICE_NAME);
         if (err)
         {
             ESP_LOGE(TAG, "esp_ble_gap_set_device_name failed: %d", err);
@@ -279,14 +278,7 @@ static void gatts_event_handler(esp_gatts_cb_event_t event,
         break;
 
     case ESP_GATTS_CONNECT_EVT:
-        ESP_LOGI(TAG, "ESP_GATTS_CONNECT_EVT: conn_id=%d remote=%02x:%02x:%02x:%02x:%02x:%02x",
-                 param->connect.conn_id,
-                 param->connect.remote_bda[0],
-                 param->connect.remote_bda[1],
-                 param->connect.remote_bda[2],
-                 param->connect.remote_bda[3],
-                 param->connect.remote_bda[4],
-                 param->connect.remote_bda[5]);
+        ESP_LOGI(TAG, "========== ESP_GATTS_CONNECT_EVT ==========");
         if (ctx.conn_id != CONN_ID_INVALID)
         {
             ESP_LOGW(TAG, "Already connected, disconnecting new connection");
@@ -299,7 +291,7 @@ static void gatts_event_handler(esp_gatts_cb_event_t event,
         break;
 
     case ESP_GATTS_DISCONNECT_EVT:
-        ESP_LOGI(TAG, "ESP_GATTS_DISCONNECT_EVT: disconnect reason=%d",
+        ESP_LOGI(TAG, "~~~~~~~~~~ ESP_GATTS_DISCONNECT_EVT: %d ~~~~~~~~~~",
                  param->disconnect.reason);
         ctx.conn_id = CONN_ID_INVALID;
         start_advertising();
@@ -330,12 +322,11 @@ static void gatts_event_handler(esp_gatts_cb_event_t event,
         break;
 
     case ESP_GATTS_WRITE_EVT:
-        ESP_LOGI(TAG, "ESP_GATTS_WRITE_EVT: conn_id=%d trans_id=%d handle=%d write_len=%d",
+        ESP_LOGD(TAG, "ESP_GATTS_WRITE_EVT: conn_id=%d trans_id=%d handle=%d write_len=%d",
                  param->write.conn_id,
                  (int)param->write.trans_id,
                  param->write.handle,
                  param->write.len);
-        ESP_LOG_BUFFER_HEX(TAG, param->write.value, param->write.len);
 
         if (param->write.is_prep)
         {

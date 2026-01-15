@@ -45,13 +45,6 @@ void app_main(void)
         panic(PANIC_ID_MAIN_NVS_FLASH_INIT_FAILED2);
     }
 
-    err = esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT);
-    if (err)
-    {
-        ESP_LOGE(TAG, "esp_bt_controller_mem_release failed: %d", err);
-        panic(PANIC_ID_MAIN_BT_CONTROLLER_MEM_RELEASE_FAILED);
-    }
-
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     err = esp_bt_controller_init(&bt_cfg);
     if (err)
@@ -60,7 +53,7 @@ void app_main(void)
         panic(PANIC_ID_MAIN_BT_CONTROLLER_INIT_FAILED);
     }
 
-    err = esp_bt_controller_enable(ESP_BT_MODE_BLE);
+    err = esp_bt_controller_enable(ESP_BT_MODE_BTDM);
     if (err)
     {
         ESP_LOGE(TAG, "esp_bt_controller_enable failed: %d", err);

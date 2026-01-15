@@ -6,6 +6,9 @@
 #include <string.h>
 
 #include <freertos/FreeRTOS.h>
+#include <esp_log.h>
+
+#define TAG "APP"
 
 typedef enum
 {
@@ -38,6 +41,21 @@ static void set_state(app_state_t new_state)
     }
 }
 
+static void log_txrx(const char *prefix, const uint8_t *data, uint16_t length)
+{
+    static char buffer[256];
+    if (length > sizeof(buffer) - 1)
+    {
+        length = sizeof(buffer) - 1;
+    }
+    for (int i = 0; i < length; i++)
+    {
+        buffer[i] = (data[i] >= 32 && data[i] <= 126) ? data[i] : '.';
+    }
+    buffer[length] = 0;
+    ESP_LOGI(TAG, "%s %s", prefix, buffer);
+}
+
 void panic(panic_id_t id)
 {
     ledmgr_on_panic(id);
@@ -49,6 +67,7 @@ void panic(panic_id_t id)
 
 void app_on_gatt_connected(void)
 {
+    ctx.initial_spp_tx_buffer_len = 0;
     switch (ctx.state)
     {
     case APP_STATE_DISCONNECTED:
@@ -57,7 +76,6 @@ void app_on_gatt_connected(void)
         break;
     case APP_STATE_GATT_CONNECTED:
     case APP_STATE_GATT_SPP_CONNECTED:
-        ctx.initial_spp_tx_buffer_len = 0;
         break;
     }
 }
@@ -70,6 +88,7 @@ void app_on_gatt_disconnected(void)
 
 void app_on_gatt_rx(const uint8_t *data, uint16_t length)
 {
+    log_txrx("GATT-->ME   SPP", data, length);
     ledmgr_on_activity();
     switch (ctx.state)
     {
@@ -91,6 +110,7 @@ void app_on_gatt_rx(const uint8_t *data, uint16_t length)
         }
         break;
     case APP_STATE_GATT_SPP_CONNECTED:
+        log_txrx("GATT   ME-->SPP", data, length);
         sppcomm_tx(data, length);
         break;
     }
@@ -107,6 +127,9 @@ void app_on_spp_connected(void)
         set_state(APP_STATE_GATT_SPP_CONNECTED);
         if (ctx.initial_spp_tx_buffer_len > 0)
         {
+            log_txrx("GATT   ME-->SPP",
+                     ctx.initial_spp_tx_buffer,
+                     ctx.initial_spp_tx_buffer_len);
             sppcomm_tx(ctx.initial_spp_tx_buffer,
                        ctx.initial_spp_tx_buffer_len);
             ctx.initial_spp_tx_buffer_len = 0;
@@ -147,9 +170,11 @@ void app_on_spp_disconnected(void)
 
 void app_on_spp_rx(const uint8_t *data, uint16_t length)
 {
+    log_txrx("GATT   ME<--SPP", data, length);
     ledmgr_on_activity();
     if (ctx.state == APP_STATE_GATT_SPP_CONNECTED)
     {
+        log_txrx("GATT<--ME   SPP", data, length);
         gattcomm_tx(data, length);
     }
 }
