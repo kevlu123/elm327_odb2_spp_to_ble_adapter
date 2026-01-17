@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        >
+        <Button
+            android:text="Request Permissions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="PermissionsButton_Clicked"
+            />
+        <Button
+            android:text="Toggle Auto-scroll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="AutoScrollButton_Clicked"
+            />
+        <Button
+            android:text="Advertise BLE"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="AdvertiseBleButton_Clicked"
+            />
+        <Button
+            android:text="Connect RFCOMM"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="ConnectRfcommButton_Clicked"
+            />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars = "vertical"
+            android:id="@+id/outputTextView"
+            android:background="#000000"
+            android:textColor="#eeeeee"
+            />
+    </LinearLayout>
+</RelativeLayout>

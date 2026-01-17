@@ -1,4 +1,8 @@
 build/
+obj/
+bin/
 .vscode/
+.vs/
+*.user
 ignore*
 sdkconfig.old
