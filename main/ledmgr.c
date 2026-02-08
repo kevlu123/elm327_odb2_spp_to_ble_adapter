@@ -12,7 +12,8 @@
 #define LEDC_MODE       LEDC_LOW_SPEED_MODE
 #define LEDC_CHANNEL    LEDC_CHANNEL_0
 #define LEDC_TIMER      LEDC_TIMER_0
-#define LEDC_BRIGHTNESS 32
+#define LEDC_BRIGHTNESS 128
+#define LEDC_BREATHING_BRIGHTNESS 24
 
 static const ledc_timer_config_t LEDC_TIMER_CONFIG = {
     .speed_mode = LEDC_MODE,
@@ -115,11 +116,11 @@ static void handle_spp_connecting(bool state_changed)
         ctx.connecting_breath_seq = 0;
     }
 
-    uint32_t level = ctx.connecting_breath_seq < 10
+    uint32_t level = ctx.connecting_breath_seq < LEDC_BREATHING_BRIGHTNESS
         ? ctx.connecting_breath_seq
-        : 19 - ctx.connecting_breath_seq;
+        : (2 * LEDC_BREATHING_BRIGHTNESS - ctx.connecting_breath_seq - 1);
     set_led_level(level);
-    ctx.connecting_breath_seq = (ctx.connecting_breath_seq + 1) % 20;
+    ctx.connecting_breath_seq = (ctx.connecting_breath_seq + 1) % (LEDC_BREATHING_BRIGHTNESS * 2);
 }
 
 static void handle_connected(void)
